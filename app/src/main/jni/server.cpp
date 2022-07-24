@@ -16,7 +16,7 @@
 #include "KittyMemory/MemoryPatch.h"
 
 //Target lib here
-#define targetLibName OBFUSCATE("libil2cpp.so")
+#define targetLibName OBFUSCATE("libFileA.so")
 
 #include "Includes/Macros.h"
 
@@ -94,16 +94,57 @@ enum f {
     f9 = 12,
     f10 = 13,
 };
-
+// fancy struct for patches for kittyMemory
 struct My_Patches {
+    // let's assume we have patches for these functions for whatever game
+    // like show in miniMap boolean function
     MemoryPatch GodMode,
     GodMode2,
     SliderExample;
+    // etc...
 } hexPatches;
 
-bool feature1, feature2;
+bool feature1, feature2, featureHookToggle, Health;
 int sliderValue = 1, level = 0;
 void *instanceBtn;
+
+// Hooking examples. Assuming you know how to write hook
+void (*AddMoneyExample)(void *instance, int amount);
+
+bool (*old_get_BoolExample)(void *instance);
+bool get_BoolExample(void *instance) {
+    if (instance != NULL && featureHookToggle) {
+        return true;
+    }
+    return old_get_BoolExample(instance);
+}
+
+float (*old_get_FloatExample)(void *instance);
+float get_FloatExample(void *instance) {
+    if (instance != NULL && sliderValue > 1) {
+        return (float) sliderValue;
+    }
+    return old_get_FloatExample(instance);
+}
+
+int (*old_Level)(void *instance);
+int Level(void *instance) {
+    if (instance != NULL && level) {
+        return (int) level;
+    }
+    return old_Level(instance);
+}
+
+void (*old_FunctionExample)(void *instance);
+void FunctionExample(void *instance) {
+    instanceBtn = instance;
+    if (instance != NULL) {
+        if (Health) {
+            *(int *) ((uint64_t) instance + 0x48) = 999;
+        }
+    }
+    return old_FunctionExample(instance);
+}
 
 
 
@@ -130,10 +171,76 @@ void *CreateServer(void *) {
                     feature2 = request.boolean;
 
                     if (feature2) {
+                        // To print bytes you can do this
+                        //if (hexPatches.GodMode.Modify()) {
+                        //    LOGD(OBFUSCATE("Current Bytes: %s"),
+                        //         hexPatches.GodMode.get_CurrBytes().c_str());
+                        //}
                         hexPatches.GodMode.Modify();
+                        hexPatches.GodMode2.Modify();
+                        //LOGI(OBFUSCATE("On"));
                     } else {
                         hexPatches.GodMode.Restore();
+                        hexPatches.GodMode2.Restore();
+                        //LOGI(OBFUSCATE("Off"));
                     }
+                    response.Success = true;
+                } else if (request.Mode == f::f2) {
+                    sliderValue = request.value;
+                    response.Success = true;
+                } else if (request.Mode == f::f3) {
+                    int value = request.value;
+                    switch (value) {
+                        //For noobies
+                        case 0:
+                            hexPatches.SliderExample = MemoryPatch::createWithHex(
+                                targetLibName, string2Offset(
+                                    OBFUSCATE("0x100000")),
+                                OBFUSCATE(
+                                    "00 00 A0 E3 1E FF 2F E1"));
+                            hexPatches.SliderExample.Modify();
+                            break;
+                        case 1:
+                            hexPatches.SliderExample = MemoryPatch::createWithHex(
+                                targetLibName, string2Offset(
+                                    OBFUSCATE("0x100000")),
+                                OBFUSCATE("01 00 A0 E3 1E FF 2F E1"));
+                            hexPatches.SliderExample.Modify();
+                            break;
+                        case 2:
+                            hexPatches.SliderExample = MemoryPatch::createWithHex(
+                                targetLibName,
+                                string2Offset(
+                                    OBFUSCATE("0x100000")),
+                                OBFUSCATE(
+                                    "02 00 A0 E3 1E FF 2F E1"));
+                            hexPatches.SliderExample.Modify();
+                            break;
+                    }
+                    response.Success = true;
+                } else if (request.Mode == f::f4) {
+                    int value = request.value;
+                    switch (value) {
+                        case 0:
+                            LOGD(OBFUSCATE("Selected item 1"));
+                            break;
+                        case 1:
+                            LOGD(OBFUSCATE("Selected item 2"));
+                            break;
+                        case 2:
+                            LOGD(OBFUSCATE("Selected item 3"));
+                            break;
+                    }
+                    response.Success = true;
+                } else if (request.Mode == f::f5) {
+                    int value = request.value;
+
+                    response.Success = true;
+                } else if (request.Mode == f::f6) {
+                    featureHookToggle = request.boolean;
+                    response.Success = true;
+                } else if (request.Mode == f::f7) {
+                    level = request.value;
                     response.Success = true;
                 }
                 server.sendX((void*)& response, sizeof(response));
@@ -151,20 +258,72 @@ void* Thread (void *) {
         sleep(1);
     } while (!il2cppMap.isValid());
 
-#if defined(__aarch64__)
-
-#else
+    #if defined(__aarch64__) //To compile this code for arm64 lib only. Do not worry about greyed out highlighting code, it still works
+    // New way to patch hex via KittyMemory without need to  specify len. Spaces or without spaces are fine
+    // ARM64 assembly example
+    // MOV X0, #0x0 = 00 00 80 D2
+    // RET = C0 03 5F D6
     hexPatches.GodMode = MemoryPatch::createWithHex(targetLibName,
+        string2Offset(OBFUSCATE("0x123456")),
+        OBFUSCATE("00 00 80 D2 C0 03 5F D6"));
+    //You can also specify target lib like this
+    hexPatches.GodMode2 = MemoryPatch::createWithHex("libtargetLibHere.so",
+        string2Offset(OBFUSCATE("0x222222")),
+        OBFUSCATE("20 00 80 D2 C0 03 5F D6"));
 
-               +                                     string2Offset(OBFUSCATE("0x45351C")),OBFUSCATE("00 48 2D E9 0D B0 A0 E1 08 D0 4D E2 64 10 A0 E3 01 20 A0 E3 32 05 00 EB 0B D0 A0 E1 00 88 BD E8 1E FF 2F E1"));
+    // Hook example. Comment out if you don't use hook
+    // Strings in macros are automatically obfuscated. No need to obfuscate!
+    HOOK("str", FunctionExample, old_FunctionExample);
+    HOOK_LIB("libFileB.so", "0x123456", FunctionExample, old_FunctionExample);
+    HOOK_NO_ORIG("0x123456", FunctionExample);
+    HOOK_LIB_NO_ORIG("libFileC.so", "0x123456", FunctionExample);
+    HOOKSYM("__SymbolNameExample", FunctionExample, old_FunctionExample);
+    HOOKSYM_LIB("libFileB.so", "__SymbolNameExample", FunctionExample, old_FunctionExample);
+    HOOKSYM_NO_ORIG("__SymbolNameExample", FunctionExample);
+    HOOKSYM_LIB_NO_ORIG("libFileB.so", "__SymbolNameExample", FunctionExample);
+
+    // Patching offsets directly. Strings are automatically obfuscated too!
+    PATCHOFFSET("0x20D3A8", "00 00 A0 E3 1E FF 2F E1");
+    PATCHOFFSET_LIB("libFileB.so", "0x20D3A8", "00 00 A0 E3 1E FF 2F E1");
+
+    AddMoneyExample = (void(*)(void *, int))getAbsoluteAddress(targetLibName, 0x123456);
+
+    #else //To compile this code for armv7 lib only.
+        // New way to patch hex via KittyMemory without need to specify len. Spaces or without spaces are fine
+    // ARMv7 assembly example
+    // MOV R0, #0x0 = 00 00 A0 E3
+    // BX LR = 1E FF 2F E1
+    hexPatches.GodMode = MemoryPatch::createWithHex(targetLibName, //Normal obfuscate
+        string2Offset(OBFUSCATE("0x123456")),
+        OBFUSCATE("00 00 A0 E3 1E FF 2F E1"));
+    //You can also specify target lib like this
+    hexPatches.GodMode2 = MemoryPatch::createWithHex("libtargetLibHere.so",
+        string2Offset(OBFUSCATE("0x222222")),
+        OBFUSCATE("01 00 A0 E3 1E FF 2F E1"));
+
+    // Hook example. Comment out if you don't use hook
+    // Strings in macros are automatically obfuscated. No need to obfuscate!
+    HOOK("str", FunctionExample, old_FunctionExample);
+    HOOK_LIB("libFileB.so", "0x123456", FunctionExample, old_FunctionExample);
+    HOOK_NO_ORIG("0x123456", FunctionExample);
+    HOOK_LIB_NO_ORIG("libFileC.so", "0x123456", FunctionExample);
+    HOOKSYM("__SymbolNameExample", FunctionExample, old_FunctionExample);
+    HOOKSYM_LIB("libFileB.so", "__SymbolNameExample", FunctionExample, old_FunctionExample);
+    HOOKSYM_NO_ORIG("__SymbolNameExample", FunctionExample);
+    HOOKSYM_LIB_NO_ORIG("libFileB.so", "__SymbolNameExample", FunctionExample);
+
+    // Patching offsets directly. Strings are automatically obfuscated too!
+    PATCHOFFSET("0x20D3A8", "00 00 A0 E3 1E FF 2F E1");
+    PATCHOFFSET_LIB("libFileB.so", "0x20D3A8", "00 00 A0 E3 1E FF 2F E1");
+
+    AddMoneyExample = (void (*)(void *, int)) getAbsoluteAddress(targetLibName, 0x123456);
 
     LOGI(OBFUSCATE("Done"));
-  #endif
+    #endif
 
     return NULL;
 
 }
-
 
 
 __attribute__((constructor))

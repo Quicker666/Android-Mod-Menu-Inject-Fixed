@@ -54,7 +54,37 @@ extern "C" {
         const char *features[] = {
             OBFUSCATE("Category_The Category"),
             //Not counted
-            OBFUSCATE("Toggle_Test"),
+            OBFUSCATE("Toggle_The toggle"),
+            OBFUSCATE(
+                "100_Toggle_True_The toggle 2"),
+            //This one have feature number assigned, and switched on by default
+            OBFUSCATE("110_Toggle_The toggle 3"),
+            //This one too
+            OBFUSCATE("SeekBar_The slider_1_100"),
+            OBFUSCATE("SeekBar_Kittymemory slider example_1_5"),
+            OBFUSCATE("Spinner_The spinner_Items 1,Items 2,Items 3"),
+            OBFUSCATE("Button_The button"),
+            OBFUSCATE("ButtonLink_The button with link_https://www.youtube.com/"),
+            //Not counted
+            OBFUSCATE("ButtonOnOff_The On/Off button"),
+            OBFUSCATE("CheckBox_The Check Box"),
+            OBFUSCATE("InputValue_Input number"),
+            OBFUSCATE("InputValue_1000_Input number 2"),
+            //Max value
+            OBFUSCATE("InputText_Input text"),
+            OBFUSCATE("RadioButton_Radio buttons_OFF,Mod 1,Mod 2,Mod 3"),
+
+            //Create new collapse
+            OBFUSCATE("Collapse_Collapse 1"),
+            OBFUSCATE("CollapseAdd_Toggle_The toggle"),
+            OBFUSCATE("CollapseAdd_Toggle_The toggle"),
+            OBFUSCATE("123_CollapseAdd_Toggle_The toggle"),
+            OBFUSCATE("CollapseAdd_Button_The button"),
+
+            //Create new collapse again
+            OBFUSCATE("Collapse_Collapse 2"),
+            OBFUSCATE("CollapseAdd_SeekBar_The slider_1_100"),
+            OBFUSCATE("CollapseAdd_InputValue_Input number"),
 
             OBFUSCATE("RichTextView_This is text view, not fully HTML."
                 "<b>Bold</b> <i>italic</i> <u>underline</u>"
@@ -95,14 +125,49 @@ extern "C" {
 
         switch (featNum) {
             case 0:
-                feature2 = boolean;
-                Send(f::f1, feature2);
+            feature2 = boolean;
+            Send(f::f1, feature2);
 
-                break;
+            break;
+            case 100:
+            break;
+            case 110:
+            break;
+            case 1:
+            if (value >= 1) {
+                sliderValue = value;
+            }
+            Send(f::f2, sliderValue);
+            break;
+            case 2:
+            Send(f::f3, value);
+            case 3:
+            Send(f::f4, value);
+            case 4:
+            Send(f::f5, value);
+            // MakeToast(env, obj, OBFUSCATE("Button pressed"), Toast::LENGTH_SHORT);
+            break;
+            case 5:
+            break;
+            case 6:
+            featureHookToggle = boolean;
+            Send(f::f6, featureHookToggle);
+            break;
+            case 7:
+            level = value;
+            Send(f::f7, value);
+            break;
+            case 8:
+            //MakeToast(env, obj, TextInput, Toast::LENGTH_SHORT);
+            break;
+            case 9:
+            break;
         }
     }
 }
 void DrawESP(ESP esp, int screenWidth, int screenHeight) {
+    float mScale = (float) screenHeight / (float) 1080;
+    esp.DrawText(Color::Yellow(), "Nepmods V1.90", Vector2(screenWidth / 2, screenHeight/1.2), 17);
 }
 
 

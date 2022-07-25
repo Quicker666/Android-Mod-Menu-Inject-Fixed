@@ -1,5 +1,5 @@
 <h1>
-  Android Mod Injector Fixed
+  Android Mod Menu Injector Fixed
 </h1>
 <p>
 Android Mod menu Injector by nepmods fixed for android 11 and android studio.

@@ -9,7 +9,7 @@ Android Mod menu Injector by nepmods fixed for android 11 and android studio.
 
 # WARNING
 
-P.S This hasn't been tested on anything else other than armeabi-v7a
+This hasn't been tested on anything else other than armeabi-v7a
 
 # Credits
 Making Project: Nepmods (https://GitHub.com/nepmods)<br>
